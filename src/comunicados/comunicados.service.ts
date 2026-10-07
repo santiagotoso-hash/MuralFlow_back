@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { AcessoService } from '../common/acesso/acesso.service';
 import { Papel } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
+import { NotificacoesService } from '../notificacoes/notificacoes.service';
 import { Turma } from '../turmas/turma.entity';
 import { CienciaComunicado } from './ciencia-comunicado.entity';
 import { Comunicado } from './comunicado.entity';
@@ -30,6 +31,7 @@ export class ComunicadosService {
     private readonly ciencias: Repository<CienciaComunicado>,
     @InjectRepository(Turma) private readonly turmas: Repository<Turma>,
     private readonly acesso: AcessoService,
+    private readonly notificacoes: NotificacoesService,
   ) {}
 
   /** Comunicados da escola inteira + os das turmas visíveis ao usuário. */
@@ -42,7 +44,9 @@ export class ComunicadosService {
       .orderBy('c.publicadoEm', 'DESC');
     if (ids) {
       qb.where(
-        ids.length ? '(c.turma_id IS NULL OR c.turma_id IN (:...ids))' : 'c.turma_id IS NULL',
+        ids.length
+          ? '(c.turma_id IS NULL OR c.turma_id IN (:...ids))'
+          : 'c.turma_id IS NULL',
         { ids },
       );
     }
@@ -77,7 +81,7 @@ export class ComunicadosService {
       );
     }
 
-    return this.comunicados.save(
+    const { id } = await this.comunicados.save(
       this.comunicados.create({
         titulo: dto.titulo,
         conteudo: dto.conteudo,
@@ -87,6 +91,10 @@ export class ComunicadosService {
         turma,
       }),
     );
+    // Recarrega para ter autor e turma completos (relações eager).
+    const comunicado = await this.comunicados.findOneByOrFail({ id });
+    void this.notificacoes.comunicadoPublicado(comunicado);
+    return comunicado;
   }
 
   async confirmarCiencia(usuario: UsuarioAutenticado, id: string) {
@@ -94,7 +102,10 @@ export class ComunicadosService {
     await this.ciencias
       .createQueryBuilder()
       .insert()
-      .values({ comunicado: { id: comunicado.id }, usuario: { id: usuario.id } })
+      .values({
+        comunicado: { id: comunicado.id },
+        usuario: { id: usuario.id },
+      })
       .orIgnore()
       .execute();
     return { ciente: true };

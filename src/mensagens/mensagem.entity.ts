@@ -18,12 +18,20 @@ export class Mensagem {
   @JoinColumn({ name: 'conversa_id' })
   conversa: Conversa;
 
-  @ManyToOne(() => Usuario, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Usuario, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'autor_id' })
   autor: Usuario | null;
 
   @Column({ type: 'text' })
   texto: string;
+
+  /** Enviada pelo sistema em nome da escola (ex.: feliz aniversário); sem autor. */
+  @Column({ default: false })
+  automatica: boolean;
 
   @CreateDateColumn({ name: 'enviada_em' })
   enviadaEm: Date;

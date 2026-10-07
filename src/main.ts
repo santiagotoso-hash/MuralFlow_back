@@ -42,7 +42,7 @@ async function bootstrap() {
 
   if (!isProduction) {
     const doc = new DocumentBuilder()
-      .setTitle('Escola Conecta API')
+      .setTitle('MuralFlow API')
       .setDescription('Comunicação entre escola e famílias')
       .setVersion('0.1.0')
       .addBearerAuth()

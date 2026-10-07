@@ -60,10 +60,12 @@ export class UsuariosController {
 
   @Patch(':id')
   @Papeis(Papel.ADMIN)
-  atualizar(
+  async atualizar(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AtualizarUsuarioDto,
   ) {
+    await this.usuarios.garantirQueSobraDirecao(usuario.id, id, dto);
     return this.usuarios.atualizar(id, dto);
   }
 }

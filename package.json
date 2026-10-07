@@ -1,7 +1,7 @@
 {
-  "name": "escola-conecta-back",
+  "name": "muralflow-back",
   "version": "0.1.0",
-  "description": "API do Escola Conecta: comunicação entre escola e famílias",
+  "description": "API do MuralFlow: comunicação entre escola e famílias",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
@@ -23,6 +23,7 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
     "@nestjs/common": "^11.2.7",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.2.7",

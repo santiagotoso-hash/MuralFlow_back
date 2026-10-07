@@ -16,7 +16,12 @@ import { UsuarioAtual } from '../common/decorators/usuario-atual.decorator';
 import { Papel } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { AlunosService } from './alunos.service';
-import { AtualizarAlunoDto, CriarAlunoDto } from './dto/aluno.dto';
+import {
+  AtualizarAlunoDto,
+  AtualizarNascimentoDto,
+  AtualizarSaudeDto,
+  CriarAlunoDto,
+} from './dto/aluno.dto';
 
 @ApiTags('alunos')
 @ApiBearerAuth()
@@ -45,6 +50,28 @@ export class AlunosController {
   @Papeis(Papel.ADMIN)
   criar(@Body() dto: CriarAlunoDto) {
     return this.alunos.criar(dto);
+  }
+
+  /** Data de nascimento: direção ou um responsável do aluno. */
+  @Patch(':id/nascimento')
+  @Papeis(Papel.ADMIN, Papel.RESPONSAVEL)
+  atualizarNascimento(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AtualizarNascimentoDto,
+  ) {
+    return this.alunos.atualizarNascimento(usuario, id, dto.dataNascimento);
+  }
+
+  /** Ficha de saúde: direção ou um responsável do aluno. */
+  @Patch(':id/saude')
+  @Papeis(Papel.ADMIN, Papel.RESPONSAVEL)
+  atualizarSaude(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AtualizarSaudeDto,
+  ) {
+    return this.alunos.atualizarSaude(usuario, id, dto);
   }
 
   @Patch(':id')

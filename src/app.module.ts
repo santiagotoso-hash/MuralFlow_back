@@ -3,7 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AlunosModule } from './alunos/alunos.module';
+import { AniversariosModule } from './aniversarios/aniversarios.module';
 import { AuthModule } from './auth/auth.module';
+import { BoletimModule } from './boletim/boletim.module';
 import { AcessoModule } from './common/acesso/acesso.module';
 import { Publico } from './common/decorators/publico.decorator';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -13,6 +15,7 @@ import { envValidationSchema } from './config/env.validation';
 import { typeormOptions } from './config/typeorm.options';
 import { EventosModule } from './eventos/eventos.module';
 import { MensagensModule } from './mensagens/mensagens.module';
+import { NotificacoesModule } from './notificacoes/notificacoes.module';
 import { TurmasModule } from './turmas/turmas.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 
@@ -39,6 +42,7 @@ class SaudeController {
         typeormOptions((key) => config.get<string>(key)?.toString()),
     }),
     AcessoModule,
+    NotificacoesModule,
     AuthModule,
     UsuariosModule,
     TurmasModule,
@@ -46,6 +50,8 @@ class SaudeController {
     ComunicadosModule,
     EventosModule,
     MensagensModule,
+    BoletimModule,
+    AniversariosModule,
   ],
   controllers: [SaudeController],
   providers: [

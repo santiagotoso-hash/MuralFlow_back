@@ -26,6 +26,36 @@ export class Aluno {
   @Column({ type: 'varchar', nullable: true, unique: true, length: 30 })
   matricula: string | null;
 
+  // ── Ficha de saúde: preenchida pela família ou pela secretaria; ──
+  // ── os professores da turma só leem.                             ──
+
+  /** Ex.: "Amendoim, camarão". Vazio = sem alergias conhecidas. */
+  @Column({ type: 'text', nullable: true })
+  alergias: string | null;
+
+  /** Ex.: "Intolerância à lactose", "vegetariano". */
+  @Column({ name: 'restricoes_alimentares', type: 'text', nullable: true })
+  restricoesAlimentares: string | null;
+
+  /** Medicamentos de uso contínuo ou de emergência (ex.: bombinha). */
+  @Column({ type: 'text', nullable: true })
+  medicamentos: string | null;
+
+  @Column({ name: 'observacoes_saude', type: 'text', nullable: true })
+  observacoesSaude: string | null;
+
+  @Column({ name: 'saude_atualizada_em', type: 'timestamptz', nullable: true })
+  saudeAtualizadaEm: Date | null;
+
+  /** Ano do último "feliz aniversário" enviado (evita mandar duas vezes). */
+  @Column({
+    name: 'aniversario_parabenizado_em',
+    type: 'int',
+    nullable: true,
+    select: false,
+  })
+  aniversarioParabenizadoEm: number | null;
+
   @ManyToOne(() => Turma, (turma) => turma.alunos, {
     nullable: true,
     onDelete: 'SET NULL',

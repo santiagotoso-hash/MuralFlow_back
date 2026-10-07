@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -36,6 +37,40 @@ export class UsuariosService {
     });
     if (!usuario) throw new NotFoundException('Usuário não encontrado');
     return usuario;
+  }
+
+  /**
+   * Trava contra deixar a escola sem direção: ninguém tira o próprio acesso
+   * de direção, nem desativa/rebaixa a última conta de direção ativa.
+   */
+  async garantirQueSobraDirecao(
+    quemEditaId: string,
+    alvoId: string,
+    dto: AtualizarUsuarioDto,
+  ) {
+    const perdeDirecao =
+      dto.ativo === false ||
+      (dto.papel !== undefined && dto.papel !== Papel.ADMIN);
+    if (!perdeDirecao) return;
+
+    if (alvoId === quemEditaId) {
+      throw new BadRequestException(
+        dto.ativo === false
+          ? 'Você não pode desativar a sua própria conta.'
+          : 'Você não pode tirar o seu próprio acesso de direção.',
+      );
+    }
+    const alvo = await this.buscar(alvoId);
+    if (alvo.papel !== Papel.ADMIN || !alvo.ativo) return;
+    const direcaoAtiva = await this.usuarios.countBy({
+      papel: Papel.ADMIN,
+      ativo: true,
+    });
+    if (direcaoAtiva <= 1) {
+      throw new BadRequestException(
+        'Esta é a última conta de direção ativa. Cadastre ou ative outra antes.',
+      );
+    }
   }
 
   async criar({ senha, email, ...dados }: CriarUsuarioDto) {

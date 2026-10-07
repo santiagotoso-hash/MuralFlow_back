@@ -1,4 +1,9 @@
-import { ApiProperty, ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  PartialType,
+  PickType,
+} from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
@@ -48,4 +53,9 @@ export class AtualizarUsuarioDto extends PartialType(CriarUsuarioDto) {
 /** Edição do próprio perfil: sem e-mail nem papel. */
 export class AtualizarPerfilDto extends PartialType(
   PickType(CriarUsuarioDto, ['nome', 'telefone', 'senha'] as const),
-) {}
+) {
+  @ApiPropertyOptional({ description: 'Receber avisos por e-mail' })
+  @IsOptional()
+  @IsBoolean()
+  receberEmails?: boolean;
+}

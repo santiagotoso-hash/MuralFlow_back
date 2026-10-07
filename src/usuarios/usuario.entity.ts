@@ -34,6 +34,27 @@ export class Usuario {
   @Column({ default: true })
   ativo: boolean;
 
+  // ── Ficha do professor. Endereço, alergias e anotações são dados pessoais:
+  // ── select: false para não saírem em nenhuma listagem por acidente; só
+  // ── ProfessoresService os carrega, e só para quem pode ver.
+
+  @Column({ name: 'data_nascimento', type: 'date', nullable: true })
+  dataNascimento: string | null;
+
+  @Column({ type: 'text', nullable: true, select: false })
+  endereco: string | null;
+
+  @Column({ type: 'text', nullable: true, select: false })
+  alergias: string | null;
+
+  /** Anotações internas da direção sobre o professor (o próprio não vê). */
+  @Column({ type: 'text', nullable: true, select: false })
+  anotacoes: string | null;
+
+  /** Avisos por e-mail (novo comunicado, nova mensagem). */
+  @Column({ name: 'receber_emails', default: true })
+  receberEmails: boolean;
+
   /** Filhos (só para responsáveis). */
   @ManyToMany(() => Aluno, (aluno) => aluno.responsaveis)
   filhos: Aluno[];

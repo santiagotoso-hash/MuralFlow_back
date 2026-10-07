@@ -12,7 +12,12 @@ import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { Turma } from '../turmas/turma.entity';
 import { Usuario } from '../usuarios/usuario.entity';
 import { Aluno } from './aluno.entity';
-import { AtualizarAlunoDto, CriarAlunoDto } from './dto/aluno.dto';
+import {
+  AtualizarAlunoDto,
+  AtualizarNascimentoDto,
+  AtualizarSaudeDto,
+  CriarAlunoDto,
+} from './dto/aluno.dto';
 
 @Injectable()
 export class AlunosService {
@@ -88,6 +93,41 @@ export class AlunosService {
       aluno.responsaveis = await this.carregarResponsaveis(dto.responsavelIds);
     }
     return this.alunos.save(aluno);
+  }
+
+  async atualizarNascimento(
+    usuario: UsuarioAutenticado,
+    id: string,
+    dataNascimento: AtualizarNascimentoDto['dataNascimento'],
+  ) {
+    const data = dataNascimento.slice(0, 10);
+    const hoje = new Date().toISOString().slice(0, 10);
+    if (data > hoje || data < '1990-01-01') {
+      throw new BadRequestException('Confira a data de nascimento');
+    }
+    // Já barra o responsável que não é deste aluno.
+    const aluno = await this.acesso.garantirAcessoAoAluno(usuario, id);
+    await this.alunos.update(aluno.id, { dataNascimento: data });
+    return this.acesso.garantirAcessoAoAluno(usuario, id);
+  }
+
+  async atualizarSaude(
+    usuario: UsuarioAutenticado,
+    id: string,
+    dto: AtualizarSaudeDto,
+  ) {
+    // Já barra o responsável que não é deste aluno.
+    const aluno = await this.acesso.garantirAcessoAoAluno(usuario, id);
+    const texto = (v?: string) =>
+      v === undefined ? undefined : v.trim() || null;
+    await this.alunos.update(aluno.id, {
+      alergias: texto(dto.alergias),
+      restricoesAlimentares: texto(dto.restricoesAlimentares),
+      medicamentos: texto(dto.medicamentos),
+      observacoesSaude: texto(dto.observacoesSaude),
+      saudeAtualizadaEm: new Date(),
+    });
+    return this.acesso.garantirAcessoAoAluno(usuario, id);
   }
 
   async remover(id: string) {

@@ -2,12 +2,15 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
+import { DISCIPLINAS } from '../../common/disciplinas';
 import { TipoEvento } from '../evento.entity';
 
 export class CriarEventoDto {
@@ -26,6 +29,14 @@ export class CriarEventoDto {
   @IsOptional()
   @IsEnum(TipoEvento)
   tipo?: TipoEvento;
+
+  @ApiPropertyOptional({
+    enum: DISCIPLINAS,
+    description: 'Obrigatória para provas',
+  })
+  @ValidateIf((o: CriarEventoDto) => o.tipo === TipoEvento.PROVA)
+  @IsIn(DISCIPLINAS, { message: 'Escolha a disciplina da prova' })
+  disciplina?: string;
 
   @ApiProperty({ example: '2026-06-20T14:00:00-03:00' })
   @IsDateString({}, { message: 'Data de início inválida' })

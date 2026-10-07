@@ -11,7 +11,7 @@ import { Papel } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
 import { Turma } from '../turmas/turma.entity';
 import { CriarEventoDto } from './dto/evento.dto';
-import { Evento } from './evento.entity';
+import { Evento, TipoEvento } from './evento.entity';
 
 @Injectable()
 export class EventosService {
@@ -22,7 +22,12 @@ export class EventosService {
   ) {}
 
   /** Eventos visíveis, por padrão a partir de hoje. */
-  async listar(usuario: UsuarioAutenticado, de?: string, ate?: string) {
+  async listar(
+    usuario: UsuarioAutenticado,
+    de?: string,
+    ate?: string,
+    tipo?: TipoEvento,
+  ) {
     const ids = await this.acesso.turmaIdsVisiveis(usuario);
     const inicioDoDia = new Date();
     inicioDoDia.setHours(0, 0, 0, 0);
@@ -33,9 +38,12 @@ export class EventosService {
       .where('e.inicio >= :de', { de: de ? new Date(de) : inicioDoDia })
       .orderBy('e.inicio', 'ASC');
     if (ate) qb.andWhere('e.inicio <= :ate', { ate: new Date(ate) });
+    if (tipo) qb.andWhere('e.tipo = :tipo', { tipo });
     if (ids) {
       qb.andWhere(
-        ids.length ? '(e.turma_id IS NULL OR e.turma_id IN (:...ids))' : 'e.turma_id IS NULL',
+        ids.length
+          ? '(e.turma_id IS NULL OR e.turma_id IN (:...ids))'
+          : 'e.turma_id IS NULL',
         { ids },
       );
     }
@@ -66,6 +74,8 @@ export class EventosService {
         titulo: dto.titulo,
         descricao: dto.descricao ?? null,
         tipo: dto.tipo,
+        disciplina:
+          dto.tipo === TipoEvento.PROVA ? (dto.disciplina ?? null) : null,
         inicio: new Date(dto.inicio),
         fim: dto.fim ? new Date(dto.fim) : null,
         local: dto.local ?? null,

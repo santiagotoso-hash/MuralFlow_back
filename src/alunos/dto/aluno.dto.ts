@@ -40,3 +40,37 @@ export class CriarAlunoDto {
 }
 
 export class AtualizarAlunoDto extends PartialType(CriarAlunoDto) {}
+
+/** O que a família pode corrigir nos dados do filho. */
+export class AtualizarNascimentoDto {
+  @ApiProperty({ example: '2016-03-14' })
+  @IsDateString({ strict: true }, { message: 'Data de nascimento inválida' })
+  dataNascimento: string;
+}
+
+/** Ficha de saúde. Texto vazio apaga o campo. */
+export class AtualizarSaudeDto {
+  @ApiPropertyOptional({ example: 'Amendoim, camarão' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  alergias?: string;
+
+  @ApiPropertyOptional({ example: 'Intolerância à lactose' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  restricoesAlimentares?: string;
+
+  @ApiPropertyOptional({ example: 'Bombinha para asma na mochila' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  medicamentos?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  observacoesSaude?: string;
+}

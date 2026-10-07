@@ -1,4 +1,4 @@
-# Escola Conecta — API
+# MuralFlow — API
 
 Comunicação entre a escola e as famílias dos alunos: **comunicados com confirmação de leitura**, **agenda escolar** e **mensagens diretas** entre responsáveis e professores.
 
@@ -34,9 +34,9 @@ Todos com a senha **`Senha@123`**:
 
 | Papel                         | E-mail                         |
 | ----------------------------- | ------------------------------ |
-| Direção                       | `direcao@escolaconecta.com.br` |
-| Professora do 5º Ano A        | `carla@escolaconecta.com.br`   |
-| Professor do 2º Ano B         | `roberto@escolaconecta.com.br` |
+| Direção                       | `direcao@muralflow.com.br` |
+| Professora do 5º Ano A        | `carla@muralflow.com.br`   |
+| Professor do 2º Ano B         | `roberto@muralflow.com.br` |
 | Mãe do Lucas e da Beatriz     | `maria@email.com`              |
 | Pai do Lucas e da Beatriz     | `joao@email.com`               |
 | Mãe do Gabriel                | `fernanda@email.com`           |
@@ -76,7 +76,7 @@ O esquema do banco muda **só por migrations** (`src/database/migrations`). `DB_
 
 Fluxo para mudar uma entidade:
 
-1. Altere a entidade e rode `npm run migration:generate --nome=DescricaoDaMudanca` contra o banco de **dev**.
+1. Altere a entidade e rode `npm run migration:generate --nome=DescricaoDaMudanca` contra o banco de **dev**. Registre a migration gerada em `src/database/migrations/index.ts` (lista explícita, usada pela API e pela CLI).
 2. Revise o arquivo gerado, rode `npm run migration:run` e teste.
 3. Commit da entidade **junto com** a migration, no mesmo PR.
 4. No deploy, o build roda `npm run migration:run:prod` antes de publicar.

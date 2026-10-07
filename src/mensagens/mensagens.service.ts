@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { AcessoService } from '../common/acesso/acesso.service';
 import { Papel } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
+import { NotificacoesService } from '../notificacoes/notificacoes.service';
 import { Conversa } from './conversa.entity';
 import { EnviarMensagemDto, IniciarConversaDto } from './dto/mensagem.dto';
 import { Mensagem } from './mensagem.entity';
@@ -22,6 +23,7 @@ export class MensagensService {
     @InjectRepository(Mensagem)
     private readonly mensagens: Repository<Mensagem>,
     private readonly acesso: AcessoService,
+    private readonly notificacoes: NotificacoesService,
   ) {}
 
   async listar(usuario: UsuarioAutenticado) {
@@ -77,7 +79,7 @@ export class MensagensService {
       throw new BadRequestException('Este responsável não é do aluno');
     }
 
-    const conversa = await this.conversas.save(
+    const { id } = await this.conversas.save(
       this.conversas.create({
         assunto: dto.assunto,
         aluno: { id: aluno.id },
@@ -85,31 +87,61 @@ export class MensagensService {
         ultimaMensagemEm: new Date(),
       }),
     );
-    await this.registrar(usuario, conversa.id, dto.texto);
-    return this.abrir(usuario, conversa.id);
+    const conversa = await this.conversas.findOneOrFail({
+      where: { id },
+      relations: { aluno: { turma: true } },
+    });
+    await this.registrar(usuario, conversa, dto.texto, true);
+    return this.abrir(usuario, id);
   }
 
-  async responder(usuario: UsuarioAutenticado, id: string, dto: EnviarMensagemDto) {
-    await this.buscarVisivel(usuario, id);
-    return this.registrar(usuario, id, dto.texto);
+  async responder(
+    usuario: UsuarioAutenticado,
+    id: string,
+    dto: EnviarMensagemDto,
+  ) {
+    const conversa = await this.buscarVisivel(usuario, id);
+    return this.registrar(usuario, conversa, dto.texto);
   }
 
-  private async registrar(usuario: UsuarioAutenticado, conversaId: string, texto: string) {
+  private async registrar(
+    usuario: UsuarioAutenticado,
+    conversa: Conversa,
+    texto: string,
+    nova = false,
+  ) {
+    // Se a conversa já estava não lida para o outro lado, ele já foi avisado:
+    // não manda outro e-mail a cada mensagem de uma sequência.
+    const outroLadoLeuEm = ehFamilia(usuario)
+      ? conversa.lidaPelaEscolaEm
+      : conversa.lidaPelaFamiliaEm;
+    const jaEstavaNaoLida =
+      !nova &&
+      conversa.ultimaDaEscola === !ehFamilia(usuario) &&
+      (!outroLadoLeuEm || outroLadoLeuEm < conversa.ultimaMensagemEm);
+
     const mensagem = await this.mensagens.save(
       this.mensagens.create({
-        conversa: { id: conversaId },
+        conversa: { id: conversa.id },
         autor: { id: usuario.id },
         texto: texto.trim(),
       }),
     );
     // Quem escreve, obviamente, já leu tudo até aqui.
-    await this.conversas.update(conversaId, {
+    await this.conversas.update(conversa.id, {
       ultimaMensagemEm: mensagem.enviadaEm,
       ultimaDaEscola: !ehFamilia(usuario),
       ...(ehFamilia(usuario)
         ? { lidaPelaFamiliaEm: mensagem.enviadaEm }
         : { lidaPelaEscolaEm: mensagem.enviadaEm }),
     });
+    if (!jaEstavaNaoLida) {
+      void this.notificacoes.mensagemRecebida(
+        conversa,
+        usuario,
+        mensagem.texto,
+      );
+    }
     return this.mensagens.findOneBy({ id: mensagem.id });
   }
 

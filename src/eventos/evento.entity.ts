@@ -31,6 +31,10 @@ export class Evento {
   @Column({ type: 'enum', enum: TipoEvento, default: TipoEvento.OUTRO })
   tipo: TipoEvento;
 
+  /** Só para provas: disciplina (ver common/disciplinas.ts). */
+  @Column({ type: 'varchar', nullable: true, length: 60 })
+  disciplina: string | null;
+
   @Column({ type: 'timestamptz' })
   inicio: Date;
 

@@ -32,4 +32,15 @@ export const envValidationSchema = Joi.object({
   JWT_EXPIRES_IN: Joi.number().default(86400),
 
   FRONTEND_URL: Joi.string().default('http://localhost:3001'),
+
+  // E-mails (Brevo). Sem BREVO_API_KEY os avisos só aparecem no log.
+  BREVO_API_KEY: Joi.string().allow(''),
+  MAIL_FROM_ADDRESS: Joi.string()
+    .email()
+    .when('BREVO_API_KEY', {
+      is: Joi.string().min(1).required(),
+      then: Joi.required(),
+    }),
+  MAIL_FROM_NAME: Joi.string().default('MuralFlow'),
+  MAIL_FORCE_SEND: Joi.boolean().truthy('true').falsy('false').default(false),
 });
