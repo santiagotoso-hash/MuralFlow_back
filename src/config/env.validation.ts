@@ -33,6 +33,9 @@ export const envValidationSchema = Joi.object({
 
   FRONTEND_URL: Joi.string().default('http://localhost:3001'),
 
+  // Vercel Cron (GET /cron/aniversarios). Sem ele, a rota responde 503.
+  CRON_SECRET: Joi.string().min(16).allow(''),
+
   // E-mails (Brevo). Sem BREVO_API_KEY os avisos só aparecem no log.
   BREVO_API_KEY: Joi.string().allow(''),
   MAIL_FROM_ADDRESS: Joi.string()
