@@ -136,7 +136,8 @@ export class MensagensService {
         : { lidaPelaEscolaEm: mensagem.enviadaEm }),
     });
     if (!jaEstavaNaoLida) {
-      void this.notificacoes.mensagemRecebida(
+      // Espera o envio (Vercel congela a função ao responder).
+      await this.notificacoes.mensagemRecebida(
         conversa,
         usuario,
         mensagem.texto,
