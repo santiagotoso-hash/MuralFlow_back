@@ -48,10 +48,13 @@ const bissexto = (ano: number) =>
  *    (e o aviso por e-mail, como qualquer mensagem nova);
  *  - os professores da turma recebem um e-mail com os aniversariantes.
  *
- * Roda ao subir a API e depois de hora em hora. Se a API estava dormindo
- * (hospedagem gratuita), envia na primeira verificação do dia. Cada aluno é
- * "reservado" com um UPDATE atômico antes do envio, então reiniciar a API ou
- * ter duas instâncias rodando não manda nada em dobro.
+ * Em servidor comum, roda ao subir a API e depois de hora em hora. Se a API
+ * estava dormindo (hospedagem gratuita), envia na primeira verificação do dia.
+ * Na Vercel (serverless) não há processo vivo para o timer: quem dispara é o
+ * Vercel Cron, chamando GET /cron/aniversarios (ver vercel.json).
+ *
+ * Cada aluno é "reservado" com um UPDATE atômico antes do envio, então
+ * reiniciar a API ou ter duas instâncias rodando não manda nada em dobro.
  */
 @Injectable()
 export class AniversariosService
@@ -70,6 +73,9 @@ export class AniversariosService
   ) {}
 
   onApplicationBootstrap() {
+    // Na Vercel a função congela ao responder: um verificar() solto poderia
+    // reservar os alunos e parar antes de enviar. Lá, só o cron dispara.
+    if (process.env.VERCEL) return;
     void this.verificar();
     this.timer = setInterval(() => void this.verificar(), UMA_HORA);
     this.timer.unref();
@@ -79,12 +85,16 @@ export class AniversariosService
     clearInterval(this.timer);
   }
 
-  async verificar(agora = new Date()) {
+  /**
+   * Envia os parabéns de hoje e devolve quantos alunos foram parabenizados.
+   * Só termina depois de todos os envios (o cron da Vercel depende disso).
+   */
+  async verificar(agora = new Date()): Promise<number> {
     const { ano, mes, dia, hora } = agoraEmBrasilia(agora);
-    if (hora < HORA_DO_ENVIO) return;
+    if (hora < HORA_DO_ENVIO) return 0;
     try {
       const ids = await this.reservarAniversariantes(ano, mes, dia);
-      if (ids.length === 0) return;
+      if (ids.length === 0) return 0;
       const alunos = await this.alunos.find({
         where: { id: In(ids) },
         relations: { turma: true, responsaveis: true },
@@ -102,15 +112,17 @@ export class AniversariosService
           porTurma.set(a.turma.id, [...(porTurma.get(a.turma.id) ?? []), a]);
       }
       for (const lista of porTurma.values()) {
-        void this.notificacoes.aniversariosNaTurma(
+        await this.notificacoes.aniversariosNaTurma(
           lista[0].turma!,
           lista.map((a) => ({ nome: a.nome, idade: this.idade(a, ano) })),
         );
       }
+      return alunos.length;
     } catch (erro) {
       this.logger.error(
         `Falha ao verificar aniversários: ${(erro as Error)?.message ?? erro}`,
       );
+      return 0;
     }
   }
 
@@ -170,7 +182,7 @@ export class AniversariosService
           texto,
         }),
       );
-      void this.notificacoes.mensagemRecebida(
+      await this.notificacoes.mensagemRecebida(
         { ...conversa, aluno, responsavel },
         { id: null, papel: Papel.ADMIN },
         texto,
