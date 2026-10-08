@@ -17,6 +17,16 @@ export enum TipoEvento {
   OUTRO = 'outro',
 }
 
+/** Igual a NOME_TIPO_EVENTO do front (lib/formatar.ts). */
+export const NOME_TIPO_EVENTO: Record<TipoEvento, string> = {
+  [TipoEvento.REUNIAO]: 'Reunião',
+  [TipoEvento.PROVA]: 'Prova',
+  [TipoEvento.PASSEIO]: 'Passeio',
+  [TipoEvento.FERIADO]: 'Feriado',
+  [TipoEvento.FESTA]: 'Festa',
+  [TipoEvento.OUTRO]: 'Outro',
+};
+
 @Entity('eventos')
 export class Evento {
   @PrimaryGeneratedColumn('uuid')

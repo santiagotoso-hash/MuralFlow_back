@@ -15,6 +15,7 @@ import { Papeis } from '../common/decorators/papeis.decorator';
 import { UsuarioAtual } from '../common/decorators/usuario-atual.decorator';
 import { EQUIPE } from '../common/enums/papel.enum';
 import type { UsuarioAutenticado } from '../common/usuario-autenticado';
+import { AniversariosAgendaService } from './aniversarios-agenda.service';
 import { CriarEventoDto } from './dto/evento.dto';
 import { TipoEvento } from './evento.entity';
 import { EventosService } from './eventos.service';
@@ -23,7 +24,16 @@ import { EventosService } from './eventos.service';
 @ApiBearerAuth()
 @Controller('eventos')
 export class EventosController {
-  constructor(private readonly eventos: EventosService) {}
+  constructor(
+    private readonly eventos: EventosService,
+    private readonly aniversarios: AniversariosAgendaService,
+  ) {}
+
+  /** Aniversários de alunos e professores que o usuário vê (dia e mês). */
+  @Get('aniversarios')
+  listarAniversarios(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    return this.aniversarios.listar(usuario);
+  }
 
   @Get()
   @ApiQuery({

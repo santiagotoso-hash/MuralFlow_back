@@ -93,7 +93,9 @@ export class ComunicadosService {
     );
     // Recarrega para ter autor e turma completos (relações eager).
     const comunicado = await this.comunicados.findOneByOrFail({ id });
-    void this.notificacoes.comunicadoPublicado(comunicado);
+    // Espera o envio: na Vercel a função congela ao responder (e o e-mail
+    // se perderia). Falha no e-mail não derruba a publicação.
+    await this.notificacoes.comunicadoPublicado(comunicado);
     return comunicado;
   }
 
