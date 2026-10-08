@@ -51,6 +51,21 @@ export class Usuario {
   @Column({ type: 'text', nullable: true, select: false })
   anotacoes: string | null;
 
+  /**
+   * Segredo do link de assinatura da agenda (.ics), que dá acesso à agenda
+   * sem login. Gerar um novo invalida o anterior.
+   */
+  @Exclude()
+  @Column({
+    name: 'token_agenda',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+    unique: true,
+    select: false,
+  })
+  tokenAgenda: string | null;
+
   /** Avisos por e-mail (novo comunicado, nova mensagem). */
   @Column({ name: 'receber_emails', default: true })
   receberEmails: boolean;
